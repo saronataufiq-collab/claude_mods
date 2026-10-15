@@ -1,0 +1,8 @@
+{
+  "name": "taufiq-mods",
+  "owner": { "name": "Taufiq Nasir" },
+  "plugins": [
+    { "name": "prompt-coach", "source": "./plugins/prompt-coach", "description": "Tips on vague prompts, plus /sharpen to rewrite a rough idea into a clear prompt" },
+    { "name": "model-router", "source": "./plugins/model-router", "description": "Sends quick questions to a cheaper model to save tokens" }
+  ]
+}
