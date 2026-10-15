@@ -10,11 +10,11 @@ Two mods for Claude Code.
 In a `claude` terminal (not the desktop Code tab), run each line, answer `y` to add the marketplace, then pick the user scope:
 
 ```
-/plugin install prompt-coach --marketplace OWNER/claude-mods
+/plugin install prompt-coach --marketplace saronataufiq-collab/claude_mods
 ```
 
 ```
-/plugin install model-router --marketplace OWNER/claude-mods
+/plugin install model-router --marketplace saronataufiq-collab/claude_mods
 ```
 
 Installed at the user scope, they also load in the desktop app's Code tab.
