@@ -23,7 +23,9 @@ export const coach = (text: string, hasAttachments: boolean): string | undefined
   return undefined
 }
 
-const SHARPEN_RULES = `You rewrite a user's rough request into a clear prompt for an AI coding and work assistant.
+const SHARPEN_RULES = `You rewrite a user's rough request into a clear prompt for Claude Code, the AI assistant the user is talking to (desktop app and terminal).
+In this setting "mods", "plugins", "skills", "hooks", "commands", "sessions" and "models" mean Claude Code ones, not games or other software, unless the conversation clearly says otherwise.
+Use the recent conversation, when given, to fill in what the user means; never quote it back at length.
 Keep the user's intent and language. Do not invent facts, files or numbers; where something important is missing, add a short [fill in: ...] placeholder.
 Structure it as:
 Goal: one sentence.
@@ -31,6 +33,19 @@ Context: what exists now / relevant files or data (placeholders if unknown).
 Requirements: 2-5 bullets.
 Done when: how to tell it worked.
 Output only the rewritten prompt, nothing else. Keep it under 150 words.`
+
+type Row = { role: 'user' | 'assistant'; text: string }
+
+// The last few text messages of the conversation, trimmed, for /sharpen to read.
+export const recentContext = (rows: readonly Row[], count = 6, maxChars = 600): string =>
+  rows
+    .filter(row => row.text.trim() !== '')
+    .slice(-count)
+    .map(row => {
+      const text = row.text.trim().replace(/\s+/g, ' ')
+      return `${row.role === 'user' ? 'User' : 'Claude'}: ${text.length > maxChars ? `${text.slice(0, maxChars)}...` : text}`
+    })
+    .join('\n')
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
@@ -60,10 +75,24 @@ export const register: Register = on => {
       return { text: 'Usage: /sharpen <your rough idea>   (add --send to send the result straight away)' }
     }
 
+    let context = ''
+    try {
+      context = recentContext(await $.session.messages())
+    } catch {
+      context = ''
+    }
+    const prompt = context
+      ? `Recent conversation:
+${context}
+
+Rough request to rewrite:
+${idea}`
+      : idea
+
     const r = await $.model.complete({
       model: 'haiku',
       system: SHARPEN_RULES,
-      prompt: idea,
+      prompt,
       effort: 'low',
       maxTokens: 600,
       timeoutMs: 30000,
